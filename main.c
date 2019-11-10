@@ -68,7 +68,7 @@ static void on_display(void)
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	/* x - osa */
+	/* x - axis */
 	glPushMatrix();
         glColor3f(1, 0, 0);
         
