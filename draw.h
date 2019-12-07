@@ -3,5 +3,6 @@
 
 void draw_walls();
 void draw_basket();
+void draw_ball();
 
 #endif

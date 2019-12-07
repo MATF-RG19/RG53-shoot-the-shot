@@ -67,7 +67,7 @@ void draw_basket()
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	
 	// Line for shooting
-	float x = -15;
+	double x = -15;
 		
 	glBegin(GL_LINE_STRIP);
 	
@@ -177,7 +177,15 @@ void draw_basket()
 		GLUquadric* net = gluNewQuadric();
 		//gluQuadricDrawStyle(cyl, GLU_TRUE);
 		//gluQuadricTexture(cyl, GLU_FILL);
-		gluCylinder(net, 0.6, 0.9, 1, 40, 10);
+		gluCylinder(net, 0.6, 0.95, 1, 40, 10);
 	
 	glPopMatrix();
+}
+
+void draw_ball()
+{
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		
+	glColor3f(0.6, 0, 0);
+	glutSolidSphere(0.5, 50, 50);
 }
