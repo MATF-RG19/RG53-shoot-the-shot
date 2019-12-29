@@ -5,10 +5,15 @@
 #include <unistd.h>
 
 #include "draw.h"
-//#include "shooting.h"
+#include "details.h"
 
 #define TIMER_ID 0
+#define STRENGTH_ID 1
+#define WEAK_ID 2
+#define STRONG_ID 3
+
 #define TIMER_INTERVAL 40
+#define TIMER_STRENGTH 20
 
 // Current coordinates of the ball
 static float x_curr, y_curr, z_curr; 
@@ -22,28 +27,40 @@ static void on_reshape(int width, int height);
 static void on_display(void);
 static void on_keyboard(unsigned char key, int x, int y);
 static void on_special_key_press(int key, int x, int y);
+static void released_key(unsigned char key, int x, int y);
 static void on_timer(int value);
+static void strength(int value);
+static void strong(int value);
+static void weak(int value);
 
 const static float pi = 3.141592653589793;
 
-// Angle and delta for camera
+// Angle for the camera
 static float phi;
-//static float delta_phi;
 
-// Angle and delta for ball
+// Angle for the ball
 static float phi_ball;
-//static float delta_phi_ball;
 
-// Shoot
+// Indicator for shoot
 static int shoot = 0;
 
 // Position of the ball
 static int position = 0;
 
+// To check if the button is pressed
+static int pressed = 0;
+
+// To check if v_x, v_y, v_z is already set
+static int set_v = 0;
+
+// Shot strength parameter and speed
+static float shot_strength_parameter = 0;
+static float v_shot_strength_parameter = 0.1;
+
 int main(int argc, char **argv)
 {
 	glutInit(&argc, argv);
-	glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
+	glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH | GLUT_MULTISAMPLE);
 	
 	glutInitWindowSize(300, 300);
 	glutInitWindowPosition(100, 100);
@@ -55,26 +72,32 @@ int main(int argc, char **argv)
 	glutKeyboardFunc(on_keyboard);
 	glutDisplayFunc(on_display);
 	glutSpecialFunc(on_special_key_press);
-
+	glutKeyboardUpFunc(released_key);
+	
 	// Initialize angle of the camera
 	phi = pi / 2;
-	//delta_phi = pi / 4; SPECIAL
 	
 	// Initialize angle of the ball
 	phi_ball = pi / 2;
-	// Special delta so the ball could follow camera and stay in front of it
-	//delta_phi_ball = pi / 4 - pi / 20;
 
+	// Initial position of the ball
 	x_curr = 11 * cos(phi_ball);
 	y_curr = 1;
 	z_curr = 11 * sin(phi_ball);
 	
+	// Initial speed of the ball
 	v_x = 0;
 	v_y = 0.4;
 	v_z = -0.5;
 
 	glClearColor(0, 0, 0, 0);
-	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_DEPTH_TEST); 
+	
+	// Important for antialiasing
+	glEnable(GL_MULTISAMPLE_ARB);
+	
+	// This enables to register just one press on the button and to register when the button is released
+	glutSetKeyRepeat(GLUT_KEY_REPEAT_OFF);
 	glutMainLoop();
 
 	return 0;
@@ -105,14 +128,566 @@ static void on_keyboard(unsigned char key, int x, int y)
 		
 		case 's':
 		case 'S':
+
+			pressed = 1;
 			if(!shoot)
 			{
-				glutTimerFunc(TIMER_INTERVAL, on_timer, TIMER_ID);
+				glutTimerFunc(TIMER_STRENGTH, strength, STRENGTH_ID);
+			}
+			
+			glutPostRedisplay();
+			break;
+			
+		case 'b':
+		case 'B':
+			break;
+	}
+}
+
+static void released_key(unsigned char key, int x, int y)
+{
+	switch(key)
+	{
+		case 's':
+		case 'S':
+		
+			pressed = 0;
+			
+			if(!shoot && !pressed)
+			{
+			
+				// If it is a good shot then call on_timer func
+				if(shot_strength_parameter > 0.4 && shot_strength_parameter < 0.7)
+					glutTimerFunc(TIMER_INTERVAL, on_timer, TIMER_ID);
+					
+				// Too weak shot
+				else if(shot_strength_parameter <= 0.4)
+					glutTimerFunc(TIMER_INTERVAL, weak, WEAK_ID);
+				
+				// Too strong shot
+				else
+					glutTimerFunc(TIMER_INTERVAL, strong, STRONG_ID);
+					
 				shoot = 1;
 			}
 			
 			break;
 	}
+}
+
+// Timer function for strong shot
+static void strong(int value)
+{
+	if(value != STRONG_ID)
+		return;
+	
+	// Counting how many times I am in the function
+	set_v++;
+	
+	// Different v_x, v_y and v_z for every position
+	if(position == 0)
+	{
+		// Setting speed of the ball first time i am in this function
+		if(set_v == 1)
+		{
+			v_z = -0.8;
+			v_y = 0.4;
+		}
+		
+		y_curr += v_y;
+		z_curr += v_z;	
+
+		if(y_curr <= 0)
+		{
+			// Animation is ending
+			y_curr = 0;
+			shoot = 0;
+			set_v = 0;
+			
+			// Delay of returning ball to its position
+			sleep(1);
+			shot_strength_parameter = 0;
+			
+			// Returning to the original coordinates for this position
+			phi_ball = pi / 2;
+			x_curr = 11 * cos(phi_ball);
+			y_curr = 1;
+			z_curr = 11 * sin(phi_ball);
+			
+			// Returning to the initial v_x, v_y and v_z
+			v_x = 0;
+			v_y = 0.4;
+			v_z = -0.5;
+			
+			glutPostRedisplay();
+		}
+		
+		// In this case the ball hits the board and it needs to repulse
+		if(y_curr <= 6 && y_curr >= 3 && z_curr >= 2 && z_curr <= 2.4)
+		{
+			v_y = -0.2;
+			v_z = 0.3;
+		}
+	}
+	
+	else if(position == -1)
+	{
+		// Setting speed of the ball first time i am in this function
+		if(set_v == 1)
+		{
+			v_x = -0.6;
+			v_y = 0.4;
+			v_z = -0.5;
+		}
+		
+		x_curr -= v_x;
+		y_curr += v_y;
+		z_curr += v_z;	
+		
+		if(y_curr <= 0)
+		{
+			// Animation is ending
+			y_curr = 0;
+			shoot = 0;
+			set_v = 0;
+			
+			// Delay of returning ball to its position
+			sleep(1);
+			shot_strength_parameter = 0;
+						
+			// Returning to the original coordinates for this position
+			phi_ball = 3 * pi / 4 - pi / 60;
+			x_curr = 11 * cos(phi_ball);
+			y_curr = 1;
+			z_curr = 11 * sin(phi_ball);
+			
+			// Returning to the initial v_x, v_y and v_z
+			v_x = -0.4;
+			v_y = 0.4;
+			v_z = -0.3;
+			
+			glutPostRedisplay();
+		}
+		
+		// In this case the ball hits the board and it needs to repulse
+		if(y_curr <= 6 && y_curr >= 2 && z_curr >= 2 && z_curr <= 2.4 && x_curr >= -1 && x_curr <= 1)
+		{
+			v_x = -0.3;
+			v_y = -0.25;
+			v_z = 0.1;
+		}
+	}
+	
+	else if(position == -2)
+	{
+		// Setting speed of the ball first time i am in this function
+		if(set_v == 1)
+		{
+			v_x = -0.5;
+			v_y = 0.4;
+		}
+		
+		y_curr += v_y;
+		x_curr -= v_x;	
+		
+		// When ball reaches this height then ball starts to decline
+		if(y_curr >= 7)
+		{
+			v_y = -0.2;
+			v_x = -0.4;
+		}
+		
+		if(y_curr <= 0)
+		{
+			// Animation is ending
+			y_curr = 0;
+			shoot = 0;
+			
+			// Delay of returning ball to its position
+			sleep(1);
+			shot_strength_parameter = 0;
+			set_v = 0;
+						
+			// Returning to the original coordinates for this position
+			phi_ball = pi - pi / 13;
+			x_curr = 11 * cos(phi_ball);
+			y_curr = 1;
+			z_curr = 11 * sin(phi_ball);
+			
+			// Returning to the initial v_x, v_y and v_z
+			v_x = -0.5;
+			v_y = 0.4;
+			v_z = 0;
+			
+			glutPostRedisplay();
+		}
+	}
+	
+	else if(position == 1)
+	{
+		// Setting speed of the ball first time i am in this function
+		if(set_v == 1)
+		{
+			v_x = 0.6;
+			v_y = 0.4;
+			v_z = -0.5;
+		}
+		
+		x_curr -= v_x;
+		y_curr += v_y;
+		z_curr += v_z;	
+		
+		if(y_curr <= 0)
+		{
+			// Animation is ending
+			y_curr = 0;
+			shoot = 0;
+			set_v = 0;
+			
+			// Delay of returning ball to its position
+			sleep(1);
+			shot_strength_parameter = 0;
+						
+			// Returning to the original coordinates for this position
+			phi_ball = pi / 4 + pi / 60;
+			x_curr = 11 * cos(phi_ball);
+			y_curr = 1;
+			z_curr = 11 * sin(phi_ball);
+			
+			// Returning to the initial v_x, v_y and v_zs
+			v_x = 0.4;
+			v_y = 0.4;
+			v_z = -0.3;
+			
+			glutPostRedisplay();
+		}
+		
+		// In this case the ball hits the board and it needs to repulse
+		if(y_curr <= 6 && y_curr >= 2 && z_curr >= 2 && z_curr <= 2.4 && x_curr >= -1 && x_curr <= 1)
+		{
+			v_x = 0.3;
+			v_y = -0.25;
+			v_z = 0.1;
+		}
+	}
+	
+	else if(position == 2)
+	{
+		// Setting speed of the ball first time i am in this function
+		if(set_v == 1)
+		{
+			v_x = -0.5;
+			v_y = 0.4;
+		}
+		
+		y_curr += v_y;
+		x_curr += v_x;	
+		
+		// When ball reaches this height then ball starts to decline
+		if(y_curr >= 7)
+		{
+			v_y = -0.2;
+			v_x = -0.4;
+		}
+		
+		if(y_curr <= 0)
+		{
+			// Animation is ending
+			y_curr = 0;
+			shoot = 0;
+			set_v = 0;
+			
+			// Delay of returning ball to its position
+			sleep(1);
+			shot_strength_parameter = 0;
+						
+			// Returning to the original coordinates for this position
+			phi_ball = pi / 13;
+			x_curr = 11 * cos(phi_ball);
+			y_curr = 1;
+			z_curr = 11 * sin(phi_ball);
+			
+			// Returning to the initial v_x, v_y and v_z
+			v_x = -0.5;
+			v_y = 0.4;
+			v_z = 0;
+			
+			glutPostRedisplay();
+		}
+	}
+	
+	glutPostRedisplay();
+	
+	if(shoot)
+		glutTimerFunc(TIMER_INTERVAL, strong, STRONG_ID);
+}
+
+// Timer function for too weak shot
+static void weak(int value)
+{
+	if(value != WEAK_ID)
+		return;
+	
+	// Counting how many times I am in the function
+	set_v++;
+	
+	// Different v_x, v_y and v_z for every position
+	if(position == 0)
+	{
+		// Setting speed of the ball first time i am in this function
+		if(set_v == 1)
+		{
+			v_z = -0.2;
+			v_y = 0.3;
+		}
+		
+		y_curr += v_y;
+		z_curr += v_z;	
+		
+		// When ball reaches this height then ball starts to decline
+		if(y_curr > 4)
+		{
+			v_y = -0.2;
+			v_z = -0.2;
+		}
+		
+		if(y_curr <= 0)
+		{
+			// Animation is ending
+			y_curr = 0;
+			shoot = 0;
+			set_v = 0;
+			
+			// Delay of returning ball to its position
+			sleep(1);
+			shot_strength_parameter = 0;
+						
+			// Returning to the original coordinates for this position
+			phi_ball = pi / 2;
+			x_curr = 11 * cos(phi_ball);
+			y_curr = 1;
+			z_curr = 11 * sin(phi_ball);
+			
+			// Returning to the initial v_x, v_y and v_z
+			v_x = 0;
+			v_y = 0.4;
+			v_z = -0.5;
+			
+			glutPostRedisplay();
+		}
+	}
+	
+	else if(position == -1)
+	{
+		// Setting speed of the ball first time i am in this function
+		if(set_v == 1)
+		{
+			v_x = -0.2;
+			v_y = 0.2;
+			v_z = -0.15;
+		}
+		
+		x_curr -= v_x;
+		y_curr += v_y;
+		z_curr += v_z;	
+		
+		// When ball reaches this height then ball starts to decline
+		if(y_curr >= 3)
+		{
+			v_y = -0.1;
+			v_z = -0.15;
+		}
+		
+		if(y_curr <= 0)
+		{
+			// Animation is ending
+			y_curr = 0;
+			shoot = 0;
+			set_v = 0;
+			
+			// Delay of returning ball to its position
+			sleep(1);
+			shot_strength_parameter = 0;
+						
+			// Returning to the original coordinates for this position
+			phi_ball = 3 * pi / 4 - pi / 60;
+			x_curr = 11 * cos(phi_ball);
+			y_curr = 1;
+			z_curr = 11 * sin(phi_ball);
+			
+			// Returning to the initial v_x, v_y and v_z
+			v_x = -0.4;
+			v_y = 0.4;
+			v_z = -0.3;
+			
+			glutPostRedisplay();
+		}
+	}
+	
+	else if(position == -2)
+	{
+		// Setting speed of the ball first time i am in this function
+		if(set_v == 1)
+		{
+			v_x = -0.3;
+			v_y = 0.2;
+		}
+		
+		y_curr += v_y;
+		x_curr -= v_x;	
+		
+		// When ball reaches this height then ball starts to decline
+		if(y_curr >= 3)
+		{
+			v_y = -0.1;
+			v_x = -0.2;
+		}
+		
+		if(y_curr <= 0)
+		{
+			// Animation is ending
+			y_curr = 0;
+			shoot = 0;
+			set_v = 0;
+			
+			// Delay of returning ball to its position
+			sleep(1);
+			shot_strength_parameter = 0;
+						
+			// Returning to the original coordinates for this position
+			phi_ball = pi - pi / 13;
+			x_curr = 11 * cos(phi_ball);
+			y_curr = 1;
+			z_curr = 11 * sin(phi_ball);
+			
+			// Returning to the initial v_x, v_y and v_z
+			v_x = -0.5;
+			v_y = 0.4;
+			v_z = 0;
+			
+			glutPostRedisplay();
+		}
+		
+		if(y_curr <= 4 && y_curr >= 3 && x_curr >= -1 && x_curr <= 1)
+		{
+			v_y = -0.2;
+			v_x = -0.1;
+			
+			if(x_curr >= -0.5 && x_curr <= 0.6)
+				v_x = 0;
+		}
+	}
+	
+	else if(position == 1)
+	{
+		// Setting speed of the ball first time i am in this function
+		if(set_v == 1)
+		{
+			v_x = 0.2;
+			v_y = 0.2;
+			v_z = -0.15;
+		}
+		
+		x_curr -= v_x;
+		y_curr += v_y;
+		z_curr += v_z;	
+		
+		// When ball reaches this height then ball starts to decline
+		if(y_curr >= 3)
+		{
+			v_y = -0.1;
+			v_z = -0.15;
+		}
+		
+		if(y_curr <= 0)
+		{
+			// Animation is ending
+			y_curr = 0;
+			shoot = 0;
+			set_v = 0;
+			
+			// Delay of returning ball to its position
+			sleep(1);
+			shot_strength_parameter = 0;
+						
+			// Returning to the original coordinates for this position
+			phi_ball = pi / 4 + pi / 60;
+			x_curr = 11 * cos(phi_ball);
+			y_curr = 1;
+			z_curr = 11 * sin(phi_ball);
+			
+			// Returning to the initial v_x, v_y and v_z
+			v_x = 0.4;
+			v_y = 0.4;
+			v_z = -0.3;
+			
+			glutPostRedisplay();
+		}
+	}
+	
+	else if(position == 2)
+	{
+		// Setting speed of the ball first time i am in this function
+		if(set_v == 1)
+		{
+			v_x = -0.3;
+			v_y = 0.2;
+		}
+		
+		y_curr += v_y;
+		x_curr += v_x;	
+		
+		// When ball reaches this height then ball starts to decline
+		if(y_curr >= 3)
+		{
+			v_y = -0.1;
+			v_x = -0.2;
+		}
+		
+		if(y_curr <= 0)
+		{
+			// Animation is ending
+			y_curr = 0;
+			shoot = 0;
+			set_v = 0;
+			
+			// Delay of returning ball to its position
+			sleep(1);
+			shot_strength_parameter = 0;
+						
+			// Returning to the original coordinates for this position
+			phi_ball = pi / 13;
+			x_curr = 11 * cos(phi_ball);
+			y_curr = 1;
+			z_curr = 11 * sin(phi_ball);
+			
+			// Returning to the initial v_x, v_y and v_z
+			v_x = -0.5;
+			v_y = 0.4;
+			v_z = 0;
+			
+			glutPostRedisplay();
+		}
+	}
+	
+	glutPostRedisplay();
+	
+	if(shoot)
+		glutTimerFunc(TIMER_INTERVAL, weak, WEAK_ID);
+}
+
+// Timer function for the strength of the shot
+static void strength(int value)
+{
+	if(value != STRENGTH_ID)
+		return;
+
+	shot_strength_parameter += v_shot_strength_parameter;
+
+	glutPostRedisplay();
+	
+	if(pressed)
+		glutTimerFunc(TIMER_STRENGTH, strength, STRENGTH_ID);
 }
 
 static void on_special_key_press(int key, int x, int y)
@@ -139,6 +714,7 @@ static void on_special_key_press(int key, int x, int y)
 				v_y = 0.4;
 				v_z = 0;		
 			}
+			
 			else if(position == -1)
 			{
 				phi = 3 * pi / 4;
@@ -149,16 +725,17 @@ static void on_special_key_press(int key, int x, int y)
 				v_y = 0.4;
 				v_z = -0.3;
 			}
+			
 			else if(position == 0)
 			{
 				phi = pi / 2;
 				phi_ball = pi / 2;
 				
-				
 				v_x = 0;
 				v_y = 0.4;
 				v_z = -0.5;
 			}
+			
 			else if(position == 1)
 			{
 				phi = pi / 4;
@@ -170,20 +747,7 @@ static void on_special_key_press(int key, int x, int y)
 				v_z = -0.3;				
 			}
 			
-			/*************** Version with camera on all positions
-			phi += delta_phi;
-			
-			// Boundary for the camera
-			if(phi > pi - pi / 18)
-				phi = pi - pi / 18;
-			
-			phi_ball += delta_phi_ball;
-			
-			// Boundary for the ball
-			if(phi_ball > pi - pi / 13)
-				phi_ball = pi - pi / 13;
-			*/
-			
+			// Coordinates of the ball
 			x_curr = 11 * cos(phi_ball);
 			y_curr = 1;
 			z_curr = 11 * sin(phi_ball);
@@ -211,6 +775,7 @@ static void on_special_key_press(int key, int x, int y)
 				v_y = 0.4;
 				v_z = 0;	
 			}
+			
 			else if(position == 1)
 			{
 				phi = pi / 4;
@@ -221,6 +786,7 @@ static void on_special_key_press(int key, int x, int y)
 				v_y = 0.4;
 				v_z = -0.3;
 			}
+			
 			else if(position == 0)
 			{
 				phi = pi / 2;
@@ -230,6 +796,7 @@ static void on_special_key_press(int key, int x, int y)
 				v_y = 0.4;
 				v_z = -0.5;
 			}
+			
 			else if(position == -1)
 			{
 				phi = 3 * pi / 4;
@@ -241,20 +808,7 @@ static void on_special_key_press(int key, int x, int y)
 				v_z = -0.3;
 			}
 						
-			/*************** Version with camera on all positions
-			phi -= delta_phi;
-			
-			
-			// Boundary for the camera
-			if(phi < pi / 18)
-				phi = pi / 18;
-			
-			phi_ball -= delta_phi_ball;
-		
-			// Boundary for the ball
-			if(phi_ball < pi / 13)
-				phi_ball = pi / 13;
-			*/
+			// Coordinates of the ball
 			x_curr = 11 * cos(phi_ball);
 			y_curr = 1;
 			z_curr = 11 * sin(phi_ball);
@@ -264,6 +818,7 @@ static void on_special_key_press(int key, int x, int y)
 	}
 }
 
+// Timer function for the good shot
 static void on_timer(int value)
 {
 	if(value != TIMER_ID)
@@ -275,6 +830,7 @@ static void on_timer(int value)
 		y_curr += v_y;
 		z_curr += v_z;	
 		
+		// When ball reaches this height then ball starts to decline
 		if(y_curr >= 5)
 		{
 			v_y = -0.1;
@@ -283,16 +839,21 @@ static void on_timer(int value)
 		
 		if(y_curr <= 0)
 		{
+			// Animation is ending
 			y_curr = 0;
 			shoot = 0;
 			
 			// Delay of returning ball to its position
 			sleep(1);
+			shot_strength_parameter = 0;
+						
+			// Returning to the original coordinates for this position
 			phi_ball = pi / 2;
 			x_curr = 11 * cos(phi_ball);
 			y_curr = 1;
 			z_curr = 11 * sin(phi_ball);
 			
+			// Returning to the initial v_x, v_y and v_z
 			v_x = 0;
 			v_y = 0.4;
 			v_z = -0.5;
@@ -300,6 +861,7 @@ static void on_timer(int value)
 			glutPostRedisplay();
 		}
 		
+		// Ball moves down the net
 		if(y_curr <= 4.5 && y_curr >= 3 && z_curr >= 2 && z_curr <= 3.6)
 		{
 			v_y = -0.2;
@@ -309,12 +871,14 @@ static void on_timer(int value)
 				v_z = 0;
 		}
 	}
+	
 	else if(position == -1)
 	{
 		x_curr -= v_x;
 		y_curr += v_y;
 		z_curr += v_z;	
 		
+		// When ball reaches this height then ball starts to decline
 		if(y_curr >= 5)
 		{
 			v_y = -0.1;
@@ -323,16 +887,21 @@ static void on_timer(int value)
 		
 		if(y_curr <= 0)
 		{
+			// Animation is ending
 			y_curr = 0;
 			shoot = 0;
 			
 			// Delay of returning ball to its position
 			sleep(1);
+			shot_strength_parameter = 0;
+						
+			// Returning to the original coordinates for this position
 			phi_ball = 3 * pi / 4 - pi / 60;
 			x_curr = 11 * cos(phi_ball);
 			y_curr = 1;
 			z_curr = 11 * sin(phi_ball);
 			
+			// Returning to the initial v_x, v_y and v_z
 			v_x = -0.4;
 			v_y = 0.4;
 			v_z = -0.3;
@@ -340,6 +909,7 @@ static void on_timer(int value)
 			glutPostRedisplay();
 		}
 		
+		// Ball moves down the net
 		if(y_curr <= 5 && y_curr >= 2 && z_curr >= 2 && z_curr <= 3 && x_curr >= -1 && x_curr <= 1)
 		{
 			v_x = -0.2;
@@ -353,11 +923,13 @@ static void on_timer(int value)
 				v_z = 0;
 		}
 	}
+	
 	else if(position == -2)
 	{
 		y_curr += v_y;
 		x_curr -= v_x;	
 		
+		// When ball reaches this height then ball starts to decline
 		if(y_curr >= 5)
 		{
 			v_y = -0.1;
@@ -366,16 +938,21 @@ static void on_timer(int value)
 		
 		if(y_curr <= 0)
 		{
+			// Animation is ending
 			y_curr = 0;
 			shoot = 0;
 			
 			// Delay of returning ball to its position
 			sleep(1);
+			shot_strength_parameter = 0;
+						
+			// Returning to the original coordinates for this position
 			phi_ball = pi - pi / 13;
 			x_curr = 11 * cos(phi_ball);
 			y_curr = 1;
 			z_curr = 11 * sin(phi_ball);
 			
+			// Returning to the initial v_x, v_y and v_z
 			v_x = -0.5;
 			v_y = 0.4;
 			v_z = 0;
@@ -383,6 +960,7 @@ static void on_timer(int value)
 			glutPostRedisplay();
 		}
 		
+		// Ball moves down the net
 		if(y_curr <= 4 && y_curr >= 3 && x_curr >= -1 && x_curr <= 1)
 		{
 			v_y = -0.2;
@@ -392,12 +970,14 @@ static void on_timer(int value)
 				v_x = 0;
 		}
 	}
+	
 	else if(position == 1)
 	{
 		x_curr -= v_x;
 		y_curr += v_y;
 		z_curr += v_z;	
 		
+		// When ball reaches this height then ball starts to decline
 		if(y_curr >= 5)
 		{
 			v_y = -0.1;
@@ -406,16 +986,21 @@ static void on_timer(int value)
 		
 		if(y_curr <= 0)
 		{
+			// Animation is ending
 			y_curr = 0;
 			shoot = 0;
 			
 			// Delay of returning ball to its position
 			sleep(1);
+			shot_strength_parameter = 0;
+						
+			// Returning to the original coordinates for this position
 			phi_ball = pi / 4 + pi / 60;
 			x_curr = 11 * cos(phi_ball);
 			y_curr = 1;
 			z_curr = 11 * sin(phi_ball);
 			
+			// Returning to the initial v_x, v_y and v_z
 			v_x = 0.4;
 			v_y = 0.4;
 			v_z = -0.3;
@@ -423,6 +1008,7 @@ static void on_timer(int value)
 			glutPostRedisplay();
 		}
 		
+		// Ball moves down the net
 		if(y_curr <= 5 && y_curr >= 2 && z_curr >= 2 && z_curr <= 3 && x_curr >= -1 && x_curr <= 1)
 		{
 			v_x = 0.2;
@@ -436,11 +1022,13 @@ static void on_timer(int value)
 				v_z = 0;
 		}
 	}
+	
 	else if(position == 2)
 	{
 		y_curr += v_y;
 		x_curr += v_x;	
 		
+		// When ball reaches this height then ball starts to decline
 		if(y_curr >= 5)
 		{
 			v_y = -0.1;
@@ -449,17 +1037,22 @@ static void on_timer(int value)
 		
 		if(y_curr <= 0)
 		{
+			// Animation is ending
 			y_curr = 0;
 			shoot = 0;
 			
 			
 			// Delay of returning ball to its position
 			sleep(1);
+			shot_strength_parameter = 0;
+						
+			// Returning to the original coordinates for this position
 			phi_ball = pi / 13;
 			x_curr = 11 * cos(phi_ball);
 			y_curr = 1;
 			z_curr = 11 * sin(phi_ball);
 			
+			// Returning to the initial v_x, v_y and v_z
 			v_x = -0.5;
 			v_y = 0.4;
 			v_z = 0;
@@ -467,6 +1060,7 @@ static void on_timer(int value)
 			glutPostRedisplay();
 		}
 		
+		// Ball moves down the net
 		if(y_curr <= 4 && y_curr >= 3 && x_curr >= -1 && x_curr <= 1)
 		{
 			v_y = -0.2;
@@ -487,7 +1081,7 @@ static void on_display(void)
 {	
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	// At the begging you are standing in front of basket
+	// At the begging you are standing in front of the basket
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	gluLookAt(
@@ -537,7 +1131,58 @@ static void on_display(void)
 		draw_ball();
 
 	glPopMatrix();
+	
+	// Position of the shoot bar
+	glPushMatrix();
 
+		if(position == 0)
+		{
+			glTranslatef(-4, 1.5, 10);
+			glRotatef(6, 1, 0, 0);
+		}
+		
+		else if(position == -1)
+		{
+			glTranslatef(-9, 1.45, 4.5);
+			glRotatef(-50, 0, 1, 0);
+			glRotatef(6, 1, 0, 0);		
+		}
+		
+		else if(position == -2)
+		{
+			glTranslatef(-12, 1.6, 0.6);
+			glRotatef(-90, 0, 1, 0);
+			glRotatef(6, 1, 0, 0);
+			glScalef(0.6, 0.6, 1);
+		}
+		
+		else if(position == 1)
+		{
+			glTranslatef(4, 1.5, 10.9);
+			glRotatef(55, 0, 1, 0);
+			glRotatef(6, 1, 0, 0);
+		}
+		
+		else if(position == 2)
+		{
+			glTranslatef(9.8, 1.45, 6.7);
+			glRotatef(90, 0, 1, 0);
+			glRotatef(6, 1, 0, 0);
+		}
+		
+		// Frame for the strength
+		frame();
+		
+		// Clip plane which moves when the shooting button is being held down
+		double clip_plane[] = {0, -1, 0, shot_strength_parameter};
+		glEnable(GL_CLIP_PLANE0);
+		glClipPlane(GL_CLIP_PLANE0, clip_plane);
+		
+		shot_strength();
+		
+		glDisable(GL_CLIP_PLANE0);
 
+	glPopMatrix();
+	
 	glutSwapBuffers();
 }

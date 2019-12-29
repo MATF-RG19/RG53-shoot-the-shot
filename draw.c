@@ -56,14 +56,19 @@ void draw_basket()
 	// Enable 
 	glEnable(GL_BLEND);
 	
-	// glBlendFunc(src, dest);
-	// src - new colors, default 1
-	// dest - colors that already exist, default 0
-	// By default blend mode is ADD 
-	// R = Rsrc * rc + Rdest * dest
-	// G = Gsrc * src + Gdest * dest
-	// B = Bsrc * src + Bdest * dest
-	// A = Asrc * src + Adest * dest
+	/*
+	glBlendFunc(src, dest);
+	src - new colors, default 1
+	dest - colors that already exist, default 0
+	By default blend mode is ADD 
+	R = Rsrc * rc + Rdest * dest
+	G = Gsrc * src + Gdest * dest
+	B = Bsrc * src + Bdest * dest
+	A = Asrc * src + Adest * dest
+	*/
+	
+	// Blend because of the transparency of the board
+	
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	
 	// Line for shooting
