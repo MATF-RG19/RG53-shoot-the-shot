@@ -6,6 +6,7 @@
 
 #include "draw.h"
 #include "details.h"
+#include "image.h"
 
 #define TIMER_ID 0
 #define STRENGTH_ID 1
@@ -14,6 +15,15 @@
 
 #define TIMER_INTERVAL 40
 #define TIMER_STRENGTH 20
+
+#define FILENAME0 "floor.bmp"
+#define FILENAME1 "brick.bmp"
+#define FILENAME2 "front.bmp"
+#define FILENAME3 "sky.bmp"
+#define FILENAME4 "start.bmp"
+#define FILENAME5 "end.bmp"
+
+static GLuint names[6];
 
 // Current coordinates of the ball
 static float x_curr, y_curr, z_curr; 
@@ -32,6 +42,11 @@ static void on_timer(int value);
 static void strength(int value);
 static void strong(int value);
 static void weak(int value);
+static void startScreen();
+static void endScreen();
+static void scoreOnTheScreen();
+
+static void initialize(void);
 
 const static float pi = 3.141592653589793;
 
@@ -56,6 +71,15 @@ static int set_v = 0;
 // Shot strength parameter and speed
 static float shot_strength_parameter = 0;
 static float v_shot_strength_parameter = 0.1;
+
+// Current score
+static int score = 0;
+
+// Still on the opening screen
+static int begin = 1;
+
+// End of the game
+static int end = 0;
 
 int main(int argc, char **argv)
 {
@@ -98,9 +122,150 @@ int main(int argc, char **argv)
 	
 	// This enables to register just one press on the button and to register when the button is released
 	glutSetKeyRepeat(GLUT_KEY_REPEAT_OFF);
+	
+	initialize();
+	
 	glutMainLoop();
 
 	return 0;
+}
+
+static void scoreOnTheScreen()
+{
+
+	//if(position == 0)
+	//{
+		glRasterPos3f(0, 2, 13);
+		//glColor3f(1, 1, 1);
+		
+		char string[] = "BLABLALBAL\0";
+		
+		for(char *s = string; *s != '\0'; s++)
+			glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *s);
+//	}
+/*	else if(position == -1)
+	{
+	
+	}
+	else if(position == -2)
+	{
+
+	}
+	else if(position == 1)
+	{
+	
+	}
+	else if(position == 2)
+	{
+	
+	}*/
+}
+
+static void initialize(void)
+{
+	Image *image;
+	
+	glEnable(GL_TEXTURE_2D);
+	
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+
+	image = image_init(0, 0);
+	
+	// Create floor texture
+	image_read(image, FILENAME0);
+	
+	// Generate identifier
+	glGenTextures(6, names);
+	
+	glBindTexture(GL_TEXTURE_2D, names[0]);
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image->width, image->height, 0,
+				GL_RGB, GL_UNSIGNED_BYTE, image->pixels);
+	
+	// Turn off active texture
+	glBindTexture(GL_TEXTURE_2D, 0);
+	
+	
+	// Create wall textures
+	image_read(image, FILENAME1);
+	
+	glBindTexture(GL_TEXTURE_2D, names[1]);
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image->width, image->height, 0,
+				GL_RGB, GL_UNSIGNED_BYTE, image->pixels);
+	
+	// Turn off active texture
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	// Create front wall texture
+	image_read(image, FILENAME2);
+	
+	glBindTexture(GL_TEXTURE_2D, names[2]);
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image->width, image->height, 0,
+				GL_RGB, GL_UNSIGNED_BYTE, image->pixels);
+	
+	// Turn off active texture
+	glBindTexture(GL_TEXTURE_2D, 0);
+	
+	// Create sky texture
+	image_read(image, FILENAME3);
+	
+	glBindTexture(GL_TEXTURE_2D, names[3]);
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image->width, image->height, 0,
+				GL_RGB, GL_UNSIGNED_BYTE, image->pixels);
+	
+	// Turn off active texture
+	glBindTexture(GL_TEXTURE_2D, 0);
+	
+	// Create opening screen texture
+	image_read(image, FILENAME4);
+	
+	glBindTexture(GL_TEXTURE_2D, names[4]);
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image->width, image->height, 0,
+				GL_RGB, GL_UNSIGNED_BYTE, image->pixels);
+	
+	// Turn off active texture
+	glBindTexture(GL_TEXTURE_2D, 0);
+	
+	// Create ending screen texture
+	image_read(image, FILENAME5);
+	
+	glBindTexture(GL_TEXTURE_2D, names[5]);
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image->width, image->height, 0,
+				GL_RGB, GL_UNSIGNED_BYTE, image->pixels);
+	
+	// Turn off active texture
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	image_done(image);
 }
 
 static void on_reshape(int width, int height)
@@ -118,19 +283,65 @@ static void on_reshape(int width, int height)
 			0.01, 100);
 }
 
+static void startScreen()
+{
+	glEnable(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, names[4]);
+	
+		glBegin(GL_POLYGON);
+			glTexCoord2f(0, 0);
+			glVertex3f(-14, -5, 0);
+			
+			glTexCoord2f(1, 0);
+			glVertex3f(13.5, -5, 0);
+			
+			glTexCoord2f(1, 1);
+			glVertex3f(13.5, 10, 0);
+			
+			glTexCoord2f(0, 1);
+			glVertex3f(-14, 10, 0);
+		glEnd();
+	
+	glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+static void endScreen()
+{
+	glEnable(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, names[5]);
+	
+		glBegin(GL_POLYGON);
+			glTexCoord2f(0, 0);
+			glVertex3f(-14, -5, 0);
+			
+			glTexCoord2f(1, 0);
+			glVertex3f(13.5, -5, 0);
+			
+			glTexCoord2f(1, 1);
+			glVertex3f(13.5, 10, 0);
+			
+			glTexCoord2f(0, 1);
+			glVertex3f(-14, 10, 0);
+		glEnd();
+	
+	glBindTexture(GL_TEXTURE_2D, 0);
+}
+
 static void on_keyboard(unsigned char key, int x, int y)
 {
 	switch(key)
 	{
+		// Exit
 		case 27:
 			exit(0);
 			break;
 		
+		// Shoot
 		case 's':
 		case 'S':
 
 			pressed = 1;
-			if(!shoot)
+			if(!shoot && !begin)
 			{
 				glutTimerFunc(TIMER_STRENGTH, strength, STRENGTH_ID);
 			}
@@ -138,8 +349,41 @@ static void on_keyboard(unsigned char key, int x, int y)
 			glutPostRedisplay();
 			break;
 			
-		case 'b':
-		case 'B':
+		// Start game on ENTER
+		case 13:
+			if(begin)
+			{
+				begin = 0;
+				glutPostRedisplay();
+			}
+			
+			break;
+		
+		// If you lose you can restart the game on SPACE
+		case 32:
+		
+			if(end)
+			{
+				score = 0;
+				shoot = 0;
+				position = 0;
+				pressed = 0;
+				set_v = 0;
+				shot_strength_parameter = 0;
+				v_shot_strength_parameter = 0.1;
+				phi = pi / 2;
+				phi_ball = pi / 2;
+				x_curr = 11 * cos(phi_ball);
+				y_curr = 1;
+				z_curr = 11 * sin(phi_ball);
+				v_x = 0;
+				v_y = 0.4;
+				v_z = -0.5;
+				end = 0;
+
+				glutPostRedisplay();
+			}
+			
 			break;
 	}
 }
@@ -153,7 +397,7 @@ static void released_key(unsigned char key, int x, int y)
 		
 			pressed = 0;
 			
-			if(!shoot && !pressed)
+			if(!shoot && !pressed && !begin)
 			{
 			
 				// If it is a good shot then call on_timer func
@@ -163,7 +407,7 @@ static void released_key(unsigned char key, int x, int y)
 				// Too weak shot
 				else if(shot_strength_parameter <= 0.4)
 					glutTimerFunc(TIMER_INTERVAL, weak, WEAK_ID);
-				
+					
 				// Too strong shot
 				else
 					glutTimerFunc(TIMER_INTERVAL, strong, STRONG_ID);
@@ -197,7 +441,7 @@ static void strong(int value)
 		y_curr += v_y;
 		z_curr += v_z;	
 
-		if(y_curr <= 0)
+		if(y_curr <= 0.5)
 		{
 			// Animation is ending
 			y_curr = 0;
@@ -218,6 +462,9 @@ static void strong(int value)
 			v_x = 0;
 			v_y = 0.4;
 			v_z = -0.5;
+			
+			// End of the game
+			end = 1;
 			
 			glutPostRedisplay();
 		}
@@ -244,7 +491,7 @@ static void strong(int value)
 		y_curr += v_y;
 		z_curr += v_z;	
 		
-		if(y_curr <= 0)
+		if(y_curr <= 0.5)
 		{
 			// Animation is ending
 			y_curr = 0;
@@ -265,6 +512,9 @@ static void strong(int value)
 			v_x = -0.4;
 			v_y = 0.4;
 			v_z = -0.3;
+			
+			// End of the game
+			end = 1;
 			
 			glutPostRedisplay();
 		}
@@ -297,7 +547,7 @@ static void strong(int value)
 			v_x = -0.4;
 		}
 		
-		if(y_curr <= 0)
+		if(y_curr <= 0.5)
 		{
 			// Animation is ending
 			y_curr = 0;
@@ -319,6 +569,9 @@ static void strong(int value)
 			v_y = 0.4;
 			v_z = 0;
 			
+			// End of the game
+			end = 1;
+			
 			glutPostRedisplay();
 		}
 	}
@@ -337,7 +590,7 @@ static void strong(int value)
 		y_curr += v_y;
 		z_curr += v_z;	
 		
-		if(y_curr <= 0)
+		if(y_curr <= 0.5)
 		{
 			// Animation is ending
 			y_curr = 0;
@@ -358,6 +611,9 @@ static void strong(int value)
 			v_x = 0.4;
 			v_y = 0.4;
 			v_z = -0.3;
+			
+			// End of the game
+			end = 1;
 			
 			glutPostRedisplay();
 		}
@@ -390,7 +646,7 @@ static void strong(int value)
 			v_x = -0.4;
 		}
 		
-		if(y_curr <= 0)
+		if(y_curr <= 0.5)
 		{
 			// Animation is ending
 			y_curr = 0;
@@ -411,6 +667,9 @@ static void strong(int value)
 			v_x = -0.5;
 			v_y = 0.4;
 			v_z = 0;
+			
+			// End of the game
+			end = 1;
 			
 			glutPostRedisplay();
 		}
@@ -451,7 +710,7 @@ static void weak(int value)
 			v_z = -0.2;
 		}
 		
-		if(y_curr <= 0)
+		if(y_curr <= 0.5)
 		{
 			// Animation is ending
 			y_curr = 0;
@@ -472,6 +731,9 @@ static void weak(int value)
 			v_x = 0;
 			v_y = 0.4;
 			v_z = -0.5;
+			
+			// End of the game
+			end = 1;
 			
 			glutPostRedisplay();
 		}
@@ -498,7 +760,7 @@ static void weak(int value)
 			v_z = -0.15;
 		}
 		
-		if(y_curr <= 0)
+		if(y_curr <= 0.5)
 		{
 			// Animation is ending
 			y_curr = 0;
@@ -519,6 +781,9 @@ static void weak(int value)
 			v_x = -0.4;
 			v_y = 0.4;
 			v_z = -0.3;
+			
+			// End of the game
+			end = 1;
 			
 			glutPostRedisplay();
 		}
@@ -543,7 +808,7 @@ static void weak(int value)
 			v_x = -0.2;
 		}
 		
-		if(y_curr <= 0)
+		if(y_curr <= 0.5)
 		{
 			// Animation is ending
 			y_curr = 0;
@@ -564,6 +829,9 @@ static void weak(int value)
 			v_x = -0.5;
 			v_y = 0.4;
 			v_z = 0;
+			
+			// End of the game
+			end = 1;
 			
 			glutPostRedisplay();
 		}
@@ -599,7 +867,7 @@ static void weak(int value)
 			v_z = -0.15;
 		}
 		
-		if(y_curr <= 0)
+		if(y_curr <= 0.5)
 		{
 			// Animation is ending
 			y_curr = 0;
@@ -620,6 +888,9 @@ static void weak(int value)
 			v_x = 0.4;
 			v_y = 0.4;
 			v_z = -0.3;
+			
+			// End of the game
+			end = 1;
 			
 			glutPostRedisplay();
 		}
@@ -644,7 +915,7 @@ static void weak(int value)
 			v_x = -0.2;
 		}
 		
-		if(y_curr <= 0)
+		if(y_curr <= 0.5)
 		{
 			// Animation is ending
 			y_curr = 0;
@@ -665,6 +936,9 @@ static void weak(int value)
 			v_x = -0.5;
 			v_y = 0.4;
 			v_z = 0;
+			
+			// End of the game
+			end = 1;
 			
 			glutPostRedisplay();
 		}
@@ -692,129 +966,132 @@ static void strength(int value)
 
 static void on_special_key_press(int key, int x, int y)
 {
-	switch(key)
+	if(!begin)
 	{
-		// Moving to the left and increasing the angle
-		case GLUT_KEY_LEFT:
-			
-			shoot = 0;
-			position -= 1;
-			
-			if(position < -2)
-				position = -2;
-			
-			// For every position I define angle of the camera, angle of the ball
-			// and v_x, v_y and v_z
-			if(position == -2)
-			{
-				phi = pi - pi / 18;
-				phi_ball = pi - pi / 13;	
+		switch(key)
+		{
+			// Moving to the left and increasing the angle
+			case GLUT_KEY_LEFT:
 				
-				v_x = -0.5;
-				v_y = 0.4;
-				v_z = 0;		
-			}
-			
-			else if(position == -1)
-			{
-				phi = 3 * pi / 4;
-				phi_ball = 3 * pi / 4 - pi / 60;
+				shoot = 0;
+				position -= 1;
 				
-				// On this position the position of the ball also depends on the v_x
-				v_x = -0.4;
-				v_y = 0.4;
-				v_z = -0.3;
-			}
-			
-			else if(position == 0)
-			{
-				phi = pi / 2;
-				phi_ball = pi / 2;
+				if(position < -2)
+					position = -2;
 				
-				v_x = 0;
-				v_y = 0.4;
-				v_z = -0.5;
-			}
-			
-			else if(position == 1)
-			{
-				phi = pi / 4;
-				phi_ball = pi / 4 + pi / 60;
+				// For every position I define angle of the camera, angle of the ball
+				// and v_x, v_y and v_z
+				if(position == -2)
+				{
+					phi = pi - pi / 18;
+					phi_ball = pi - pi / 13;	
+					
+					v_x = -0.5;
+					v_y = 0.4;
+					v_z = 0;		
+				}
+				
+				else if(position == -1)
+				{
+					phi = 3 * pi / 4;
+					phi_ball = 3 * pi / 4 - pi / 60;
+					
+					// On this position the position of the ball also depends on the v_x
+					v_x = -0.4;
+					v_y = 0.4;
+					v_z = -0.3;
+				}
+				
+				else if(position == 0)
+				{
+					phi = pi / 2;
+					phi_ball = pi / 2;
+					
+					v_x = 0;
+					v_y = 0.4;
+					v_z = -0.5;
+				}
+				
+				else if(position == 1)
+				{
+					phi = pi / 4;
+					phi_ball = pi / 4 + pi / 60;
 
-				// On this position the position of the ball also depends on the v_x
-				v_x = 0.4;
-				v_y = 0.4;
-				v_z = -0.3;				
-			}
-			
-			// Coordinates of the ball
-			x_curr = 11 * cos(phi_ball);
-			y_curr = 1;
-			z_curr = 11 * sin(phi_ball);
-			
-			glutPostRedisplay();
-			break;
+					// On this position the position of the ball also depends on the v_x
+					v_x = 0.4;
+					v_y = 0.4;
+					v_z = -0.3;				
+				}
+				
+				// Coordinates of the ball
+				x_curr = 11 * cos(phi_ball);
+				y_curr = 1;
+				z_curr = 11 * sin(phi_ball);
+				
+				glutPostRedisplay();
+				break;
 
-		// Moving to the right and decreasing the angle
-		case GLUT_KEY_RIGHT:
-		
-			shoot = 0;
-			position += 1;
+			// Moving to the right and decreasing the angle
+			case GLUT_KEY_RIGHT:
 			
-			if(position > 2)
-				position = 2;
-			
-			// For every position I define angle of the camera, angle of the ball
-			// and v_x, v_y and v_z
-			if(position == 2)
-			{
-				phi = pi / 18;
-				phi_ball = pi / 13;		
+				shoot = 0;
+				position += 1;
 				
-				v_x = -0.5;
-				v_y = 0.4;
-				v_z = 0;	
-			}
-			
-			else if(position == 1)
-			{
-				phi = pi / 4;
-				phi_ball = pi / 4 + pi / 60;
+				if(position > 2)
+					position = 2;
 				
-				// On this position the position of the ball also depends on the v_x
-				v_x = 0.4;
-				v_y = 0.4;
-				v_z = -0.3;
-			}
-			
-			else if(position == 0)
-			{
-				phi = pi / 2;
-				phi_ball = pi / 2;
+				// For every position I define angle of the camera, angle of the ball
+				// and v_x, v_y and v_z
+				if(position == 2)
+				{
+					phi = pi / 18;
+					phi_ball = pi / 13;		
+					
+					v_x = -0.5;
+					v_y = 0.4;
+					v_z = 0;	
+				}
 				
-				v_x = 0;
-				v_y = 0.4;
-				v_z = -0.5;
-			}
-			
-			else if(position == -1)
-			{
-				phi = 3 * pi / 4;
-				phi_ball = 3 * pi / 4 - pi / 60;
+				else if(position == 1)
+				{
+					phi = pi / 4;
+					phi_ball = pi / 4 + pi / 60;
+					
+					// On this position the position of the ball also depends on the v_x
+					v_x = 0.4;
+					v_y = 0.4;
+					v_z = -0.3;
+				}
 				
-				// On this position the position of the ball also depends on the v_x
-				v_x = -0.4;
-				v_y = 0.4;
-				v_z = -0.3;
-			}
-						
-			// Coordinates of the ball
-			x_curr = 11 * cos(phi_ball);
-			y_curr = 1;
-			z_curr = 11 * sin(phi_ball);
+				else if(position == 0)
+				{
+					phi = pi / 2;
+					phi_ball = pi / 2;
+					
+					v_x = 0;
+					v_y = 0.4;
+					v_z = -0.5;
+				}
 				
-			glutPostRedisplay();
-			break;
+				else if(position == -1)
+				{
+					phi = 3 * pi / 4;
+					phi_ball = 3 * pi / 4 - pi / 60;
+					
+					// On this position the position of the ball also depends on the v_x
+					v_x = -0.4;
+					v_y = 0.4;
+					v_z = -0.3;
+				}
+							
+				// Coordinates of the ball
+				x_curr = 11 * cos(phi_ball);
+				y_curr = 1;
+				z_curr = 11 * sin(phi_ball);
+					
+				glutPostRedisplay();
+				break;
+		}
 	}
 }
 
@@ -837,7 +1114,7 @@ static void on_timer(int value)
 			v_z = -0.5;
 		}
 		
-		if(y_curr <= 0)
+		if(y_curr <= 0.5)
 		{
 			// Animation is ending
 			y_curr = 0;
@@ -885,7 +1162,7 @@ static void on_timer(int value)
 			v_z = -0.3;
 		}
 		
-		if(y_curr <= 0)
+		if(y_curr <= 0.5)
 		{
 			// Animation is ending
 			y_curr = 0;
@@ -936,7 +1213,7 @@ static void on_timer(int value)
 			v_x = -0.5;
 		}
 		
-		if(y_curr <= 0)
+		if(y_curr <= 0.5)
 		{
 			// Animation is ending
 			y_curr = 0;
@@ -984,7 +1261,7 @@ static void on_timer(int value)
 			v_z = -0.3;
 		}
 		
-		if(y_curr <= 0)
+		if(y_curr <= 0.5)
 		{
 			// Animation is ending
 			y_curr = 0;
@@ -1035,7 +1312,7 @@ static void on_timer(int value)
 			v_x = -0.5;
 		}
 		
-		if(y_curr <= 0)
+		if(y_curr <= 0.5)
 		{
 			// Animation is ending
 			y_curr = 0;
@@ -1084,7 +1361,22 @@ static void on_display(void)
 	// At the begging you are standing in front of the basket
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	gluLookAt(
+	
+	if(begin)
+	{
+		gluLookAt(0, 3, 12, 0, 3, 0, 0, 1, 0);
+		startScreen();
+	}
+	
+	else if(end)
+	{
+		gluLookAt(0, 3, 12, 0, 3, 0, 0, 1, 0);
+		endScreen();
+	}
+	
+	else
+	{
+		gluLookAt(
 			//0, 25, 10,
 			15 * cos(phi), 2, 15 * sin(phi),
 			//10, 10, 15,
@@ -1095,94 +1387,121 @@ static void on_display(void)
 			0, 1, 0
 		);
 
-	/* x - axis */
-    glColor3f(1, 0, 0);
-        
-    glBegin(GL_LINES);
-    	glVertex3f(50, 0, 0);
-        glVertex3f(-50, 0, 0);
-    glEnd();
-    
-	/* y - axis */
-    glColor3f(0, 1, 0);
-    
-    glBegin(GL_LINES); 
-        glVertex3f(0, 50, 0);
-        glVertex3f(0, 0, 0);
-    glEnd();
+		/* x - axis */
+		glColor3f(1, 0, 0);
+		    
+		glBegin(GL_LINES);
+			glVertex3f(50, 0, 0);
+		    glVertex3f(-50, 0, 0);
+		glEnd();
+		
+		/* y - axis */
+		glColor3f(0, 1, 0);
+		
+		glBegin(GL_LINES); 
+		    glVertex3f(0, 50, 0);
+		    glVertex3f(0, 0, 0);
+		glEnd();
 
-    /* z - axis*/
-    glColor3f(0, 0, 1);
-    
-    glBegin(GL_LINES);
-        glVertex3f(0, 0, 50);
-        glVertex3f(0, 0, 0);
-    glEnd();
-    
-    draw_walls();
-    draw_basket();
-	
+		/* z - axis*/
+		glColor3f(0, 0, 1);
+		
+		glBegin(GL_LINES);
+		    glVertex3f(0, 0, 50);
+		    glVertex3f(0, 0, 0);
+		glEnd();
+		
+	   	glBindTexture(GL_TEXTURE_2D, names[0]);
+			draw_floor();
+		glBindTexture(GL_TEXTURE_2D, 0);
+		 
+		glBindTexture(GL_TEXTURE_2D, names[1]);
+			draw_left_wall();
+		glBindTexture(GL_TEXTURE_2D, 0);
+		
+		glBindTexture(GL_TEXTURE_2D, names[1]);
+			draw_right_wall();
+		glBindTexture(GL_TEXTURE_2D, 0);
+		
+		glBindTexture(GL_TEXTURE_2D, names[2]);
+			draw_front_wall();
+		glBindTexture(GL_TEXTURE_2D, 0);
+		
+		glBindTexture(GL_TEXTURE_2D, names[1]);
+			draw_back_wall();  
+		glBindTexture(GL_TEXTURE_2D, 0);
+		
+		glBindTexture(GL_TEXTURE_2D, names[3]);
+			draw_sky();
+		glBindTexture(GL_TEXTURE_2D, 0);
+		
+		draw_basket();
 
-	// Ball and movement of the ball
-	
-	glPushMatrix();
-	
-		glTranslatef(x_curr, y_curr, z_curr);
-		draw_ball();
+		// Ball and movement of the ball
+		
+		glPushMatrix();
+		
+			glTranslatef(x_curr, y_curr, z_curr);
+			draw_ball();
 
-	glPopMatrix();
-	
-	// Position of the shoot bar
-	glPushMatrix();
+		glPopMatrix();
+		
+		// Position of the shoot bar
+		glPushMatrix();
 
-		if(position == 0)
-		{
-			glTranslatef(-4, 1.5, 10);
-			glRotatef(6, 1, 0, 0);
-		}
-		
-		else if(position == -1)
-		{
-			glTranslatef(-9, 1.45, 4.5);
-			glRotatef(-50, 0, 1, 0);
-			glRotatef(6, 1, 0, 0);		
-		}
-		
-		else if(position == -2)
-		{
-			glTranslatef(-12, 1.6, 0.6);
-			glRotatef(-90, 0, 1, 0);
-			glRotatef(6, 1, 0, 0);
-			glScalef(0.6, 0.6, 1);
-		}
-		
-		else if(position == 1)
-		{
-			glTranslatef(4, 1.5, 10.9);
-			glRotatef(55, 0, 1, 0);
-			glRotatef(6, 1, 0, 0);
-		}
-		
-		else if(position == 2)
-		{
-			glTranslatef(9.8, 1.45, 6.7);
-			glRotatef(90, 0, 1, 0);
-			glRotatef(6, 1, 0, 0);
-		}
-		
-		// Frame for the strength
-		frame();
-		
-		// Clip plane which moves when the shooting button is being held down
-		double clip_plane[] = {0, -1, 0, shot_strength_parameter};
-		glEnable(GL_CLIP_PLANE0);
-		glClipPlane(GL_CLIP_PLANE0, clip_plane);
-		
-		shot_strength();
-		
-		glDisable(GL_CLIP_PLANE0);
+			if(position == 0)
+			{
+				glTranslatef(-4, 1.5, 10);
+				glRotatef(6, 1, 0, 0);
+			}
+			
+			else if(position == -1)
+			{
+				glTranslatef(-9, 1.45, 4.5);
+				glRotatef(-50, 0, 1, 0);
+				glRotatef(6, 1, 0, 0);		
+			}
+			
+			else if(position == -2)
+			{
+				glTranslatef(-12, 1.6, 0.6);
+				glRotatef(-90, 0, 1, 0);
+				glRotatef(6, 1, 0, 0);
+				glScalef(0.6, 0.6, 1);
+			}
+			
+			else if(position == 1)
+			{
+				glTranslatef(4, 1.5, 10.9);
+				glRotatef(55, 0, 1, 0);
+				glRotatef(6, 1, 0, 0);
+			}
+			
+			else if(position == 2)
+			{
+				glTranslatef(9.8, 1.45, 6.7);
+				glRotatef(90, 0, 1, 0);
+				glRotatef(6, 1, 0, 0);
+			}
+			
+			// Frame for the strength
+			frame();
+			
+			// Clip plane which moves when the shooting button is being held down
+			double clip_plane[] = {0, -1, 0, shot_strength_parameter};
+			glEnable(GL_CLIP_PLANE0);
+			glClipPlane(GL_CLIP_PLANE0, clip_plane);
+			
+			shot_strength();
+			
+			glDisable(GL_CLIP_PLANE0);
 
-	glPopMatrix();
-	
+		glPopMatrix();
+		
+		/*
+		scoreOnTheScreen();
+		*/
+	}
+		
 	glutSwapBuffers();
 }

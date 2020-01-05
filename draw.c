@@ -5,47 +5,132 @@
 
 #include "draw.h"
 
-void draw_walls()
+void draw_floor()
 {
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	// Front wall
-	glBegin(GL_POLYGON);
-		glColor3f(0.3, 0.3, 0.3);
-		
-		glVertex3f(-30, 0, 0);
-		glVertex3f(30, 0, 0);
-		glVertex3f(30, 30, 0);
-		glVertex3f(-30, 30, 0);
-	glEnd();
 	
-	// Left wall
+	// Floor and texture for floor
 	glBegin(GL_POLYGON);
-		glColor3f(0.3, 0.3, 0.3);
-		
+		glNormal3f(1, 1, 1);
+	
+		glTexCoord2f(0, 0);
 		glVertex3f(-30, 0, 30);
-		glVertex3f(-30, 0, 0);
-		glVertex3f(-30, 30, 0);
-		glVertex3f(-30, 30, 30);
-	glEnd();
-	
-	// Right wall
-	glBegin(GL_POLYGON);
-		glColor3f(0.3, 0.3, 0.3);
 		
-		glVertex3f(30, 0, 0);
+		glTexCoord2f(10, 0);
 		glVertex3f(30, 0, 30);
-		glVertex3f(30, 30, 30);
-		glVertex3f(30, 30, 0);
+		
+		glTexCoord2f(10, 10);
+		glVertex3f(30, 0, 0);
+		
+		glTexCoord2f(0, 10);
+		glVertex3f(-30, 0, 0);
 	glEnd();
+}
 
-	// Back wall
+void draw_sky()
+{
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+	// Sky and texture for sky
+	// +/- 31 and not 30 because of textures
 	glBegin(GL_POLYGON);
-		glColor3f(0.3, 0.3, 0.3);
+		glNormal3f(1, 1, 1);
+	
+		glTexCoord2f(0, 0);
+		glVertex3f(-31, 15, 30);
 		
-		glVertex3f(30, 0, 30);
+		glTexCoord2f(2, 0);
+		glVertex3f(31, 15, 30);
+		
+		glTexCoord2f(2, 1);
+		glVertex3f(31, 15, 0);
+		
+		glTexCoord2f(0, 1);
+		glVertex3f(-31, 15, 0);
+	glEnd();
+}
+
+void draw_front_wall()
+{
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+	// Front wall and texture for wall
+	glBegin(GL_POLYGON);
+		
+		glTexCoord2f(0, 0);
+		glVertex3f(-30, 0, 0);
+		
+		glTexCoord2f(1, 0);
+		glVertex3f(30, 0, 0);
+		
+		glTexCoord2f(1, 1);
+		glVertex3f(30, 15, 0);
+		
+		glTexCoord2f(0, 1);
+		glVertex3f(-30, 15, 0);
+	glEnd();
+}
+
+void draw_left_wall()
+{
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+	// Left wall and texture for wall
+	glBegin(GL_POLYGON);
+		
+		glTexCoord2f(0, 0);
 		glVertex3f(-30, 0, 30);
-		glVertex3f(-30, 30, 30);
-		glVertex3f(30, 30, 30);
+		
+		glTexCoord2f(2, 0);
+		glVertex3f(-30, 0, 0);
+		
+		glTexCoord2f(2, 3);
+		glVertex3f(-30, 15, 0);
+		
+		glTexCoord2f(0, 3);
+		glVertex3f(-30, 15, 30);
+	glEnd();
+}	
+
+void draw_right_wall()
+{
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+	// Right wall and texture for wall
+	glBegin(GL_POLYGON);
+		
+		glTexCoord2f(0, 0);
+		glVertex3f(30, 0, 0);
+		
+		glTexCoord2f(2, 0);
+		glVertex3f(30, 0, 30);
+		
+		glTexCoord2f(2, 3);
+		glVertex3f(30, 15, 30);
+		
+		glTexCoord2f(0, 3);
+		glVertex3f(30, 15, 0);
+	glEnd();
+}
+
+void draw_back_wall()
+{
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+	// Back wall and texture for wall
+	glBegin(GL_POLYGON);
+		
+		glTexCoord2f(0, 0);
+		glVertex3f(30, 0, 30);
+		
+		glTexCoord2f(2, 0);
+		glVertex3f(-30, 0, 30);
+		
+		glTexCoord2f(2, 3);
+		glVertex3f(-30, 15, 30);
+		
+		glTexCoord2f(0, 3);
+		glVertex3f(30, 15, 30);
 	glEnd();
 }
 
@@ -106,7 +191,7 @@ void draw_basket()
 		
 		glTranslatef(0, 5, 1.4);	
 		glScalef(2, 0.92, 0.1);
-		glColor4f(1, 1, 1, 0.2);
+		glColor4f(1, 1, 1, 0.5);
 		glutSolidCube(3);
 		
 	glPopMatrix();
@@ -114,9 +199,8 @@ void draw_basket()
 	// Rectangle inside of the board, dimensions of the outer rectangle: 1.98 and 1.5007
 	// Inner rectangle is distant by 0.15 from each side of the outer rectangle
 	glPushMatrix();
-		
+
 		glTranslatef(0, 4, 1.6);
-		//glTranslatef(0, 0.7728, 0);
 		glColor3f(0, 0, 0);
 		glBegin(GL_POLYGON);
 		
