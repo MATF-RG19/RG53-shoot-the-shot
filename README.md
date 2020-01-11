@@ -1,4 +1,4 @@
-# :basketball: Shoot the shot <br>
+# :basketball: Shoot the shot
 <hr>
 
 ## :video_game: Goal of the game: <br>
@@ -49,7 +49,7 @@ If you miss the game ends. <hr>
   <hr>
 
 ## :wrench: Installation: <br>
-<code> git clone https://github.com/MATF-RG19/RG53-shoot-the-shot </code> <br>
-<code> cd RG53-shoot-the-shot </code> <br>
-<code> make </code> <br>
-<code> ./shoot-the-shot </code>
+* <code> git clone https://github.com/MATF-RG19/RG53-shoot-the-shot </code> <br>
+* <code> cd RG53-shoot-the-shot </code> <br>
+* <code> make </code> <br>
+* <code> ./shoot-the-shot </code>
