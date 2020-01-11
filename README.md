@@ -1,11 +1,14 @@
-# :basketball: Shoot the shot
+# :basketball: Shoot the shot <br>
+<hr>
 
-## :video_game: Goal of the game:
+## :video_game: Goal of the game: <br>
+<hr>
 Goal of the game is to make as many shots as you can. <br>
 You can shoot from different positions. <br>
 If you miss the game ends.
 
-## :scroll: Commands:
+## :scroll: Commands: <br>
+<hr>
   <table>
     <thead>
       <th> Command </th>
@@ -46,7 +49,9 @@ If you miss the game ends.
     </tbody>
   </table>
   
-## :wrench: Installation:
+## :wrench: Installation: <br>
+<hr>
+
 <code> git clone https://github.com/MATF-RG19/RG53-shoot-the-shot </code> <br>
 <code> cd RG53-shoot-the-shot </code> <br>
 <code> make </code> <br>
