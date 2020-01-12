@@ -4,6 +4,7 @@
 ## :video_game: Goal of the game: <br>
 Goal of the game is to make as many shots as you can. <br>
 You can shoot from different positions. <br>
+The strength of the shot is determined by the length of holding the button for shot. <br>
 If you miss the game ends. <hr>
 
 ## :scroll: Commands: <br>
