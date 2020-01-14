@@ -3,6 +3,7 @@
 #include <GL/glut.h>
 #include <math.h>
 #include <unistd.h>
+#include <string.h>
 
 #include "draw.h"
 #include "details.h"
@@ -44,7 +45,6 @@ static void strong(int value);
 static void weak(int value);
 static void startScreen();
 static void endScreen();
-static void scoreOnTheScreen();
 
 static void initialize(void);
 
@@ -128,37 +128,6 @@ int main(int argc, char **argv)
 	glutMainLoop();
 
 	return 0;
-}
-
-static void scoreOnTheScreen()
-{
-
-	//if(position == 0)
-	//{
-		glRasterPos3f(0, 2, 13);
-		//glColor3f(1, 1, 1);
-		
-		char string[] = "BLABLALBAL\0";
-		
-		for(char *s = string; *s != '\0'; s++)
-			glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *s);
-//	}
-/*	else if(position == -1)
-	{
-	
-	}
-	else if(position == -2)
-	{
-
-	}
-	else if(position == 1)
-	{
-	
-	}
-	else if(position == 2)
-	{
-	
-	}*/
 }
 
 static void initialize(void)
@@ -325,6 +294,22 @@ static void endScreen()
 		glEnd();
 	
 	glBindTexture(GL_TEXTURE_2D, 0);
+	
+	
+	glPushMatrix(); 
+		glColor3f(1, 1, 1);
+    	glRasterPos3f(-3.2, 1.3, 3);
+    	
+    	char str[50];
+  		sprintf(str, "%d", score);
+  		int length = strlen(str);
+  		
+    	for(int i = 0; i < length; i++)
+    	{
+        	glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, str[i]);
+    	}
+    
+    glPopMatrix();
 }
 
 static void on_keyboard(unsigned char key, int x, int y)
@@ -402,8 +387,10 @@ static void released_key(unsigned char key, int x, int y)
 			
 				// If it is a good shot then call on_timer func
 				if(shot_strength_parameter > 0.4 && shot_strength_parameter < 0.7)
+				{
+					score++;
 					glutTimerFunc(TIMER_INTERVAL, on_timer, TIMER_ID);
-					
+				}	
 				// Too weak shot
 				else if(shot_strength_parameter <= 0.4)
 					glutTimerFunc(TIMER_INTERVAL, weak, WEAK_ID);
@@ -1497,10 +1484,6 @@ static void on_display(void)
 			glDisable(GL_CLIP_PLANE0);
 
 		glPopMatrix();
-		
-		/*
-		scoreOnTheScreen();
-		*/
 	}
 		
 	glutSwapBuffers();
