@@ -1374,30 +1374,6 @@ static void on_display(void)
 			0, 1, 0
 		);
 
-		/* x - axis */
-		glColor3f(1, 0, 0);
-		    
-		glBegin(GL_LINES);
-			glVertex3f(50, 0, 0);
-		    glVertex3f(-50, 0, 0);
-		glEnd();
-		
-		/* y - axis */
-		glColor3f(0, 1, 0);
-		
-		glBegin(GL_LINES); 
-		    glVertex3f(0, 50, 0);
-		    glVertex3f(0, 0, 0);
-		glEnd();
-
-		/* z - axis*/
-		glColor3f(0, 0, 1);
-		
-		glBegin(GL_LINES);
-		    glVertex3f(0, 0, 50);
-		    glVertex3f(0, 0, 0);
-		glEnd();
-		
 	   	glBindTexture(GL_TEXTURE_2D, names[0]);
 			draw_floor();
 		glBindTexture(GL_TEXTURE_2D, 0);
