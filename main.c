@@ -276,6 +276,8 @@ static void startScreen()
 
 static void endScreen()
 {
+	glDisable(GL_LIGHTING);
+	
 	glEnable(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, names[5]);
 	
@@ -310,6 +312,8 @@ static void endScreen()
     	}
     
     glPopMatrix();
+    
+    glEnable(GL_LIGHTING);
 }
 
 static void on_keyboard(unsigned char key, int x, int y)
@@ -1373,6 +1377,21 @@ static void on_display(void)
 			0, 3, 2.6, // always look at the same point
 			0, 1, 0
 		);
+				
+		// Added light
+		GLfloat lightPosition[] = {0, 5, 0, 0};
+		GLfloat lightAmbient[] = {0.1, 0.1, 0.1, 0};
+		GLfloat lightDiffuse[] = {1, 1, 1, 1};
+		GLfloat lightSpecular[] = {0.9, 0.9, 0.9, 1};
+		
+		glLightModeli(GL_LIGHT_MODEL_TWO_SIDE,1);
+		glEnable(GL_LIGHTING);
+		glEnable(GL_LIGHT0);
+		
+		glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
+		glLightfv(GL_LIGHT0, GL_AMBIENT, lightAmbient);
+		glLightfv(GL_LIGHT0, GL_DIFFUSE, lightDiffuse);
+		glLightfv(GL_LIGHT0, GL_SPECULAR, lightSpecular);
 
 	   	glBindTexture(GL_TEXTURE_2D, names[0]);
 			draw_floor();

@@ -7,6 +7,8 @@
 
 void draw_floor()
 {
+	glDisable(GL_LIGHTING);
+	
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	
 	// Floor and texture for floor
@@ -25,10 +27,14 @@ void draw_floor()
 		glTexCoord2f(0, 10);
 		glVertex3f(-30, 0, 0);
 	glEnd();
+	
+	glEnable(GL_LIGHTING);
 }
 
 void draw_sky()
 {
+	glDisable(GL_LIGHTING);
+	
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 	// Sky and texture for sky
@@ -48,10 +54,14 @@ void draw_sky()
 		glTexCoord2f(0, 1);
 		glVertex3f(-31, 15, 0);
 	glEnd();
+	
+	glEnable(GL_LIGHTING);
 }
 
 void draw_front_wall()
 {
+	glDisable(GL_LIGHTING);
+	
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 	// Front wall and texture for wall
@@ -69,6 +79,8 @@ void draw_front_wall()
 		glTexCoord2f(0, 1);
 		glVertex3f(-30, 15, 0);
 	glEnd();
+	
+	glDisable(GL_LIGHTING);
 }
 
 void draw_left_wall()
@@ -94,6 +106,8 @@ void draw_left_wall()
 
 void draw_right_wall()
 {
+	glDisable(GL_LIGHTING);
+	
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 	// Right wall and texture for wall
@@ -111,10 +125,14 @@ void draw_right_wall()
 		glTexCoord2f(0, 3);
 		glVertex3f(30, 15, 0);
 	glEnd();
+	
+	glEnable(GL_LIGHTING);
 }
 
 void draw_back_wall()
 {
+	glDisable(GL_LIGHTING);
+	
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 	// Back wall and texture for wall
@@ -132,10 +150,14 @@ void draw_back_wall()
 		glTexCoord2f(0, 3);
 		glVertex3f(30, 15, 30);
 	glEnd();
+	
+	glEnable(GL_LIGHTING);
 }
 
 void draw_basket()
 {
+	glDisable(GL_LIGHTING);
+	
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	
 	// Enable 
@@ -269,12 +291,18 @@ void draw_basket()
 		gluCylinder(net, 0.6, 0.95, 1, 40, 10);
 	
 	glPopMatrix();
+	
+	glEnable(GL_LIGHTING);
 }
 
 void draw_ball()
 {
+	glDisable(GL_LIGHTING);
+	
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		
 	glColor3f(0.6, 0, 0);
 	glutSolidSphere(0.5, 50, 50);
+	
+	glEnable(GL_LIGHTING);
 }

@@ -7,6 +7,8 @@
 
 void frame()
 {
+	glDisable(GL_LIGHTING);
+	
 	//Outer line for shot strength
 	glColor3f(0, 0, 0);
 	
@@ -41,11 +43,15 @@ void frame()
 		glVertex3f(-0.5, 1, 0);
 		glVertex3f(-0.55, 1, 0);
 	glEnd();
+	
+	glEnable(GL_LIGHTING);
 }
 
 // Shot strength with gradient of colors
 void shot_strength()
 {
+	glDisable(GL_LIGHTING);
+	
 	glBegin(GL_POLYGON);
 	
 		glColor3f(1, 1, 1);
@@ -67,4 +73,6 @@ void shot_strength()
 		glVertex3f(0, 1, 0);
 		glVertex3f(-0.5, 1, 0);
 	glEnd();
+	
+	glEnable(GL_LIGHTING);
 }
